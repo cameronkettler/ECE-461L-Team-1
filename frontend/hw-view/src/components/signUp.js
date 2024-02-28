@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import './App.css';
-import Signup from './signup'
+import { Link } from 'react-router-dom';
 
-function App() {
+function Signup() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
@@ -16,17 +15,17 @@ function App() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log('Login with Username:', username);
-    console.log('Login with Password:', password);
+    console.log('Signup with Username:', username);
+    console.log('Signup with Password:', password);
+    // You can add further signup logic here
   };
 
   return (
     <div className="App">
-        
       <header className="App-header">
         <form onSubmit={handleSubmit}>
           <label>
-          <h1>Login</h1>
+            <h1>Sign Up</h1>
             Username:
             <input type="text" value={username} onChange={handleUsernameChange} />
           </label>
@@ -36,12 +35,12 @@ function App() {
             <input type="password" value={password} onChange={handlePasswordChange} />
           </label>
           <br />
-          <button type="submit">Login</button>
+          <button type="submit">Sign Up</button>
         </form>
-        <Signup />
+        <Link to="/">Back to Login</Link>
       </header>
     </div>
   );
 }
 
-export default App;
+export default Signup;
