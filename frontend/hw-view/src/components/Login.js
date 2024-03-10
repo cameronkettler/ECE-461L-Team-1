@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link } from 'react-router-dom'; 
 
 function Login() {
@@ -19,6 +19,10 @@ function Login() {
     console.log('Login with Password:', password);
     // You can add further login logic here
   };
+
+  useEffect(() =>
+    fetch
+  )
 
   return (
     <div className="App">

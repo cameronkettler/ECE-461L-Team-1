@@ -2,15 +2,28 @@ from flask import Flask, send_from_directory,request,json
 from flask_cors import CORS
 import json
 import os
+import sys
 
-app = Flask(__name__, static_folder="./build", static_url_path="/")
+app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
 CORS(app)
 
 global firstNameInput
 
 @app.route("/", methods=["GET"])
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+     return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/get", methods=["GET"])
+def get():
+     print('TEST', file=sys.stdout)
+     return {'test_key': 'test_value'}
+
+@app.route("/input", methods=["PUT"])
+def input():
+     data = request.json
+     print('incoming:', file=sys.stdout)
+     print(data, file=sys.stdout)
+     return '1'
 
 @app.route("/firstname/", methods=["POST"])
 def getter_firstName():
@@ -36,4 +49,4 @@ def lastName():
     return json.dumps({'lastname':returnValue})
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=False, port=os.environ.get("PORT", 80))
+    app.run(host="0.0.0.0", debug=True, port=os.environ.get("PORT", 80))
