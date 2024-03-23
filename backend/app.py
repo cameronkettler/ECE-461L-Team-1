@@ -1,52 +1,62 @@
-from flask import Flask, send_from_directory,request,json
+#passcode: R6BykARDXo2JIEEs
+from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
 import json
 import os
 import sys
 
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
 app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
 CORS(app)
 
-global firstNameInput
+uri = "mongodb+srv://andrewjli121:R6BykARDXo2JIEEs@ece461l.orvvqud.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(uri, server_api=ServerApi('1'))
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+database = client["ECE461LSemesterProject"]
+hardware = database["HardwareComponents"]
+projects = database["Projects"]
+users = database["Users"]
+
+@app.route("/signup", methods=["POST"])
+def signUp():
+     data = request.json 
+     username = data.get("username")
+     password = data.get("password")
+
+     if users.find_one({"username": username}):
+          return jsonify({"error": "Username already exists, please select another Username"}), 400
+     
+     else:
+          users.insert_one({"username": username, "password": password})
+          return jsonify({"message": "Signup Successful"})
+
+@app.route("/login", methods=["POST"])
+def login():
+     data = request.json 
+     username = data.get("username")
+     password = data.get("password")
+
+     validUser = users.find_one({"username": username})
+
+     if validUser is None:
+          return jsonify({"error": "Invalid username or password"}), 401
+     
+     if validUser["password"] == password:
+        return jsonify({"message": "Login Successful"}), 200
+     else: 
+        return jsonify({"error": "Invalid username or password"}), 401
+
 
 @app.route("/", methods=["GET"])
 def index():
      return send_from_directory(app.static_folder, "index.html")
-
-@app.route("/get", methods=["GET"])
-def get():
-     print('TEST', file=sys.stdout)
-     return {'test_key': 'test_value'}
-
-@app.route("/input", methods=["PUT"])
-def input():
-     data = request.json
-     print('incoming:', file=sys.stdout)
-     print(data, file=sys.stdout)
-     return '1'
-
-@app.route("/firstname/", methods=["POST"])
-def getter_firstName():
-    print('post request working')
-    data = request.json
-    global firstNameInput
-    firstNameInput = data['firstname']
-    print(firstNameInput)
-    return '1'
-
-@app.route("/lastname/", methods=["GET"])
-def lastName():
-    print('GET request working')
-    nameList = {"Abhay": "Samant"}
-    returnValue = ""
-
-    for firstName in nameList:
-        if (firstNameInput == firstName):
-            returnValue = nameList[firstName]
-        else:
-            returnValue = "User Not Found"
-
-    return json.dumps({'lastname':returnValue})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=os.environ.get("PORT", 80))
