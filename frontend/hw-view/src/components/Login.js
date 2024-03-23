@@ -38,16 +38,12 @@ function Login() {
   };
 
   useEffect(() => {
-    // Perform any asynchronous actions here, such as fetching data
-    // Example:
     fetch('https://api.example.com/data')
       .then(response => response.json())
       .then(data => {
-        // Process the fetched data
         console.log(data);
       })
       .catch(error => {
-        // Handle errors
         console.error('Error fetching data:', error);
       });
   }, []);

@@ -26,8 +26,9 @@ function Signup() {
         body: JSON.stringify({ username, password }),
       });
       if (response.ok) {
-        console.log('Sign-up successful');
-        navigate('/project'); // Redirect to projects page
+        console.log('Sign up successful');
+        setError('Sig up successful')
+        navigate('/project');
       } else {
         const data = await response.json();
         setError(data.message || 'Sign-up failed');
