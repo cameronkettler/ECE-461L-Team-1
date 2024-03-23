@@ -1,14 +1,16 @@
 #passcode: R6BykARDXo2JIEEs
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, session
 from flask_cors import CORS
 import json
 import os
 import sys
+from encryption import encrypt
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
 app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
+app.secret_key = "temp_secret_key"
 CORS(app)
 
 uri = "mongodb+srv://andrewjli121:R6BykARDXo2JIEEs@ece461l.orvvqud.mongodb.net/?retryWrites=true&w=majority"
@@ -34,8 +36,9 @@ def signUp():
           return jsonify({"error": "Username already exists, please select another Username"}), 400
      
      else:
-          users.insert_one({"username": username, "password": password})
+          users.insert_one({"username": username, "password": encrypt(password)})
           return jsonify({"message": "Signup Successful"})
+
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -48,11 +51,43 @@ def login():
      if validUser is None:
           return jsonify({"error": "Invalid username or password"}), 401
      
-     if validUser["password"] == password:
+     if encrypt(validUser["password"]) == password:
+        session['username'] = username
         return jsonify({"message": "Login Successful"}), 200
      else: 
         return jsonify({"error": "Invalid username or password"}), 401
 
+
+@app.route("/get_project", methods=["GET"])
+def get_project():
+    pass
+
+@app.route("/push_project", methods=["POST"])
+def push_project():
+     data = request.json #Need to contain: Project name, checking in/out, quantity, 
+     project_name = data.get('project_name')
+     quantity = data.get('quantity')
+     check_in = data.get('check_in')    #checking out if false
+
+     valid_project = projects.find_one({"project_name": project_name})
+
+     if valid_project is None:
+         return jsonify({"error": "Invalid project name"}), 401
+     
+     if session['user'] in valid_project['user_access']:
+         if check_in:
+             pass
+
+         else:
+             return jsonify(valid_project)
+     else:
+         return jsonify({"error": "You don't have access to this project"}), 401
+         
+
+@app.route("/logout")
+def logout():
+    session.pop('username', default=None)
+    return '<p>Logged out</p>'
 
 @app.route("/", methods=["GET"])
 def index():
