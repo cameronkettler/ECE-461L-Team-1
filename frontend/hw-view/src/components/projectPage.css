@@ -1,0 +1,31 @@
+  /* This is used as the main <span> block for the inline elements */
+  .project-info span {
+    display: inline-block;
+    margin-right: 10px;
+  }
+  .project-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  /* Update the color of a block when a user has joined */
+  .joined-project {
+    background-color: lightgreen;
+  }
+  
+  h3{
+    text-align: center;
+  }
+  
+  .align-middle{
+    text-align: center;
+  }
+  
+  @keyframes App-logo-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }

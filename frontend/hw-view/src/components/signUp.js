@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Signup() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleUsernameChange = (event) => {
     setUsername(event.target.value);
@@ -17,7 +18,7 @@ function Signup() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch('/signup', {
+      const response = await fetch('http://127.0.0.1:80/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,6 +27,7 @@ function Signup() {
       });
       if (response.ok) {
         console.log('Sign-up successful');
+        navigate('/project'); // Redirect to projects page
       } else {
         const data = await response.json();
         setError(data.message || 'Sign-up failed');
