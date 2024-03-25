@@ -57,10 +57,19 @@ def login():
      else: 
         return jsonify({"error": "Invalid username or password"}), 401
 
-
 @app.route("/get_project", methods=["GET"])
 def get_project():
-    pass
+    data = request.json
+    project_name = data.get('project_name')
+
+    valid_project = projects.find_one({"project_name": project_name})
+    if valid_project is None:
+        return jsonify({"error": "Invalid project name"}), 401
+    
+    if session['user'] in valid_project['user_access']:
+        return jsonify(valid_project)
+    else:
+        return jsonify({"error": "You don't have access to this project"}), 401
 
 @app.route("/push_project", methods=["POST"])
 def push_project():
@@ -76,13 +85,35 @@ def push_project():
      
      if session['user'] in valid_project['user_access']:
          if check_in:
-             pass
-
+            hardware_data = hardware.find_one({"tag": "global-info"})
+            availability = hardware_data['availability']
+            if availability >= quantity:
+                availability -= quantity
+                valid_project['quantity'] += quantity
          else:
              return jsonify(valid_project)
      else:
          return jsonify({"error": "You don't have access to this project"}), 401
          
+@app.route('/create_project', methods=['POST'])
+def create_project():
+    data = request.json #Need to contain: Project name, quantity, users
+    project_name = data.get('project_name')
+    quantity = data.get('quantity')
+    users = data.get('users')
+
+    if not data:
+        return jsonify({"error": "Invalid project name"}), 401
+    
+    hardware_data = hardware.find_one({"tag": "global-info"})
+    availability = hardware_data['availability']
+    if availability >= quantity:
+        availability -= quantity
+        projects.insert_one({'project_name':project_name, 'quantity': quantity, 'users':users})
+        return jsonify({"message": "Created Project Successfully"})
+    else:
+        return jsonify({"error": "You don't have access to this project"}), 401
+
 
 @app.route("/logout")
 def logout():
