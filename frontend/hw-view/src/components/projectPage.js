@@ -172,8 +172,16 @@ function Projects( {currState, onCreateProject} ){
       setIsModalOpen(false); // Close the modal
       onCreateProject(projectData); // Add the new project to the project list
       
-    
-        const data = {
+      const updatedProjects = projects.map(project => {
+        if (project.name === projectData.name) {
+          return { ...project, alreadyJoined: false }; // Assuming the new project is not already joined
+        }
+          return project;
+        });
+        setProject(updatedProjects);
+        
+
+          const data = {
         project_name: projectData.name,
         quantity: projectData.quantity, // You need to ensure you have this value in projectData
         users: projectData.users // You need to ensure you have this value in projectData
@@ -225,4 +233,5 @@ function Projects( {currState, onCreateProject} ){
 }
 
 export default Projects;
+
 
