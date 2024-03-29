@@ -2,6 +2,9 @@ import './projectPage.css';
 import React, {useState, useEffect} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import Button from '@mui/material/Button';
+import NewProjectModal from './newProjectModal';
+
+
 
 function ProjectRow({project}){
   const { name, listAuthorizedUsers, HWSet1, HWSet2, alreadyJoined } = project;
@@ -89,13 +92,15 @@ function ProjectRow({project}){
     project.alreadyJoined = !joined; 
   }
 
+
+
   return (
     // We will use <tr> because we are displaying these projects in a table-row format
     // <td> denotes table-data, in this case the table data is the entire row we are displaying
     // <span> is used to display elements in-line
   <tr>
     <td className={`project-container ${alreadyJoined ? "joined-project" : ""}`}>
-      <h3 className = "align-middle">{name}</h3>
+      <h3 className = "align-middle">{project.name}</h3>
       <div className="project-info">
         <span>Authorized Users: {listAuthorizedUsers}</span>
         <div>
@@ -149,13 +154,59 @@ function ProjectTable({projectInfo}){
   );
 }
 
-function Projects( {currState} ){
+function Projects( {currState, onCreateProject} ){
     const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [projects, setProject] = useState([]);
+    const [STATE, setState] = useState([]);
     function handleSignOut() {
         // Handle sign-out logic here
         navigate('/');
       }
   // Projects will create an instance of Project Table which will do most of the heavy lifting for displaying our projects page
+    function handleNewProject() {
+      setIsModalOpen(true);
+    }
+    
+    function handleCloseModalAndAddProject(projectData) {
+      setIsModalOpen(false); // Close the modal
+      onCreateProject(projectData); // Add the new project to the project list
+      
+    
+        const data = {
+        project_name: projectData.name,
+        quantity: projectData.quantity, // You need to ensure you have this value in projectData
+        users: projectData.users // You need to ensure you have this value in projectData
+      };
+
+      // Make a POST request to the backend endpoint
+      fetch('/create_project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create project');
+        }
+        // Handle success response here if needed
+        return response.json();
+      })
+      .then(data => {
+        // Handle success response here if needed
+        console.log(data);
+      })
+      .catch(error => {
+        // Handle error here
+        console.error('Error creating project:', error);
+      });
+
+  }
+
+
+
   return (
     <div>
       <h2>
@@ -165,9 +216,13 @@ function Projects( {currState} ){
       <h4>Each user will be able to check out a maximum of 100 hardware components of each HW set at a time</h4>
       <h4>Current personal inventory and projects are displayed below</h4>
       <ProjectTable projectInfo = {currState}/>
-      <Button variant="contained" onClick={handleSignOut}>Sign Out</Button>
+      <Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button>
+      <Button variant="contained" onClick={handleNewProject} className="button-gap">Create new project</Button>
+      <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />
+      
     </div>
   );
 }
 
 export default Projects;
+
