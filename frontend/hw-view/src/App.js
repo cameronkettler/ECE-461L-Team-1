@@ -20,8 +20,8 @@ function handleCreateProject(projectData) {
         HWSet2: "20/100", //replace capacity with global one
         alreadyJoined: false
     };
-    const updatedProjects = [...projects, newProject];
-    setProjects(updatedProjects);
+    // Update the state using the previous state correctly
+    setProjects(prevProjects => [...prevProjects, newProject]);
     
   }
 
