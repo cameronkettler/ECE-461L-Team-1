@@ -102,20 +102,17 @@ def push_project():
 def create_project():
     data = request.json #Need to contain: Project name, quantity, users
     project_name = data.get('project_name')
-    quantity = data.get('quantity')
     users = data.get('users')
 
     if not data:
         return jsonify({"error": "Invalid project name"}), 401
     
-    hardware_data = hardware.find_one({"tag": "global-info"})
-    availability = hardware_data['availability']
-    if availability >= quantity:
-        availability -= quantity
-        projects.insert_one({'project_name':project_name, 'quantity': quantity, 'users':users})
+    exist = projects.find_one({"project_name": project_name})
+    if not exist:
+        projects.insert_one({'project_name':project_name, 'quantity': 0, 'users':users})
         return jsonify({"message": "Created Project Successfully"})
     else:
-        return jsonify({"error": "You don't have access to this project"}), 401
+        return jsonify({"error": "A project with this name already exists"}), 401
 
 
 @app.route("/logout")
