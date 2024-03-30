@@ -12,7 +12,7 @@ function ProjectRow({project}){
   const [HWSet, pushHWSet] = useState();
 
   useEffect(() => {
-    fetch('http://127.0.0.1:80/get')
+    fetch('http://127.0.0.1:80/get_project')
       .then(res => res.json())
       .then(data => {
         console.log(data);

@@ -36,7 +36,7 @@ def signUp():
           return jsonify({"error": "Username already exists, please select another Username"}), 400
      
      else:
-          users.insert_one({"username": username, "password": encrypt(password)})
+          users.insert_one({"username": username, "password": encrypt(password, 2, 1)})
           return jsonify({"message": "Signup Successful"})
 
 
@@ -51,11 +51,12 @@ def login():
      if validUser is None:
           return jsonify({"error": "Invalid username or password"}), 401
      
-     if encrypt(validUser["password"]) == password:
+     if encrypt(validUser["password"], 2, 1) == password:
         session['username'] = username
         return jsonify({"message": "Login Successful"}), 200
      else: 
         return jsonify({"error": "Invalid username or password"}), 401
+
 
 @app.route("/get_project", methods=["GET"])
 def get_project():
@@ -70,6 +71,7 @@ def get_project():
         return jsonify(valid_project)
     else:
         return jsonify({"error": "You don't have access to this project"}), 401
+
 
 @app.route("/push_project", methods=["POST"])
 def push_project():
@@ -95,6 +97,7 @@ def push_project():
      else:
          return jsonify({"error": "You don't have access to this project"}), 401
          
+
 @app.route('/create_project', methods=['POST'])
 def create_project():
     data = request.json #Need to contain: Project name, quantity, users
@@ -119,6 +122,7 @@ def create_project():
 def logout():
     session.pop('username', default=None)
     return '<p>Logged out</p>'
+
 
 @app.route("/", methods=["GET"])
 def index():
