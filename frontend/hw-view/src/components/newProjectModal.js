@@ -5,13 +5,13 @@ import './projectPage.css';
 
 
 function NewProjectModal({ isOpen, onClose, onCreateProject }) {
-    const [projectName, setProjectName] = useState('');
+    const [name, setProjectName] = useState('');
     const [description, setDescription] = useState('');
     const [projectID, setProjectID] = useState('');
 
     const handleSubmit = (event) => {
         event.preventDefault(); 
-        onCreateProject({ projectName, description, projectID });
+        onCreateProject({ name, description, projectID });
         setProjectName('');
         setDescription('');
         setProjectID('');
@@ -36,7 +36,7 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
                     <input
                         type="text"
                         placeholder="Project Name"
-                        value={projectName}
+                        value={name}
                         onChange={(e) => setProjectName(e.target.value)}
                         className="input-field" 
                     />
@@ -65,3 +65,4 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
 }
 
 export default NewProjectModal;
+
