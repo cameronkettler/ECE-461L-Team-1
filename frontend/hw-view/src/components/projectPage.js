@@ -11,13 +11,6 @@ function ProjectRow({project}){
   const [joined, setJoined] = useState(alreadyJoined);
   const [HWSet, pushHWSet] = useState();
 
-  useEffect(() => {
-    fetch('http://127.0.0.1:80/get_project')
-      .then(res => res.json())
-      .then(data => {
-        console.log(data);
-      })
-  }, []);
 
   const f_pushHWSet = (input) => {
     pushHWSet(input);
@@ -95,9 +88,6 @@ function ProjectRow({project}){
 
 
   return (
-    // We will use <tr> because we are displaying these projects in a table-row format
-    // <td> denotes table-data, in this case the table data is the entire row we are displaying
-    // <span> is used to display elements in-line
   <tr>
     <td className={`project-container ${alreadyJoined ? "joined-project" : ""}`}>
       <h3 className = "align-middle">{project.name}</h3>
@@ -129,7 +119,6 @@ function ProjectTable({projectInfo}){
   const rows = [];
   let lastCategory = null;
 
-  // We want, in this case, 3 rows. We can use forEach because projectInfo knows there are 3 project entries in the STATE array
   projectInfo.forEach((project) => {
     if(project.name !== lastCategory){
       rows.push(
@@ -145,93 +134,65 @@ function ProjectTable({projectInfo}){
     
   });
   return(
-    /* To extenuate the component structure, we will use the project-container from out css file in order to 
-       create a box around all of our projects
-    */
     <div className="project-container">
       {rows}
     </div>
   );
 }
 
-function Projects( {currState, onCreateProject} ){
-    const navigate = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [projects, setProject] = useState([]);
-    const [STATE, setState] = useState([]);
-    function handleSignOut() {
-        // Handle sign-out logic here
-        navigate('/');
-      }
-  // Projects will create an instance of Project Table which will do most of the heavy lifting for displaying our projects page
-    function handleNewProject() {
-      setIsModalOpen(true);
-    }
-    
-    function handleCloseModalAndAddProject(projectData) {
-      setIsModalOpen(false); // Close the modal
-      onCreateProject(projectData); // Add the new project to the project list
-      
-      const updatedProjects = projects.map(project => {
-        if (project.name === projectData.name) {
-          return { ...project, alreadyJoined: false }; // Assuming the new project is not already joined
-        }
-          return project;
-        });
-        setProject(updatedProjects);
-        
+function Projects({ currState, onCreateProject }) {
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projects, setProjects] = useState([]); // State to store the projects data
 
-          const data = {
-        project_name: projectData.name,
-        quantity: projectData.quantity, // You need to ensure you have this value in projectData
-        users: projectData.users // You need to ensure you have this value in projectData
-      };
-
-      // Make a POST request to the backend endpoint
-      fetch('/create_project', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to create project');
-        }
-        // Handle success response here if needed
-        return response.json();
-      })
+  useEffect(() => {
+    // Fetch projects data from the backend when the component mounts
+    fetch('http://127.0.0.1:80/get_projects')
+      .then(res => res.json())
       .then(data => {
-        // Handle success response here if needed
-        console.log(data);
+        setProjects(data); // Update the projects state with the fetched data
       })
       .catch(error => {
-        // Handle error here
-        console.error('Error creating project:', error);
+        console.error('Error fetching projects:', error);
       });
+  }, []); // Empty dependency array ensures the effect runs only once when the component mounts
 
+  function handleSignOut() {
+    navigate('/');
   }
 
+  function handleNewProject() {
+    setIsModalOpen(true);
+  }
 
+  function handleCloseModalAndAddProject(projectData) {
+    setIsModalOpen(false); // Close the modal
+
+    if (!projectData) {
+      console.error('projectData is null or undefined');
+      return;
+    }
+
+    // Update projects state with the newly added project
+    setProjects(prevProjects => [...prevProjects, projectData]);
+
+    // Call onCreateProject here to ensure it's executed after the state update
+    onCreateProject(projectData);
+  }
 
   return (
     <div>
-      <h2>
-        Projects
-      </h2>
+      <h2>Projects</h2>
       <h4>Already Joined Projects will appear in light green</h4>
       <h4>Each user will be able to check out a maximum of 100 hardware components of each HW set at a time</h4>
       <h4>Current personal inventory and projects are displayed below</h4>
-      <ProjectTable projectInfo = {currState}/>
+      <ProjectTable projectInfo={projects} />
       <Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button>
       <Button variant="contained" onClick={handleNewProject} className="button-gap">Create new project</Button>
       <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />
-      
     </div>
   );
 }
 
 export default Projects;
-
 
