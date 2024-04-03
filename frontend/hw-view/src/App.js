@@ -14,7 +14,7 @@ function App() {
 
 function handleCreateProject(projectData) {
     const newProject = {
-        name: projectData.projectName,
+        name: projectData.name,
         listAuthorizedUsers: "Current User", //replace with current user maybe
         HWSet1: "50/100", //replace capacity with the global one
         HWSet2: "20/100", //replace capacity with global one
