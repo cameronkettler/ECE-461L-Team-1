@@ -26,7 +26,6 @@ def decrypt(input: str, n: int, d: int):
         result += chr(val)
     return result
 
-
 # class hardwareSet:
 #     def __init__(self):
 #         self.capacity = 0

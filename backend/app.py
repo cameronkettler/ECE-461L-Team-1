@@ -4,7 +4,7 @@ from flask_cors import CORS
 import json
 import os
 import sys
-from encryption import encrypt
+from encryption import encrypt, decrypt
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -36,7 +36,7 @@ def signUp():
           return jsonify({"error": "Username already exists, please select another Username"}), 400
      
      else:
-          users.insert_one({"username": username, "password": encrypt(password, 2, 1)})
+          users.insert_one({"username": username, "password": encrypt(password, 2, 1), projects: []})
           return jsonify({"message": "Signup Successful"})
 
 
@@ -51,49 +51,61 @@ def login():
      if validUser is None:
           return jsonify({"error": "Invalid username or password"}), 401
      
-     if encrypt(validUser["password"], 2, 1) == password:
-        session['username'] = username
+     if decrypt(validUser["password"], 2, 1) == password:
+        hardware.update_one({'name': 'HWSet1'}, {"$set": {'username': username}})
         return jsonify({"message": "Login Successful"}), 200
      else: 
         return jsonify({"error": "Invalid username or password"}), 401
 
 
-@app.route("/get_project", methods=["GET"])
+@app.route("/get_projects", methods=["GET"])
 def get_project():
     data = request.json
-    project_name = data.get('project_name')
+    username = data.get('user')
 
-    valid_project = projects.find_one({"project_name": project_name})
-    if valid_project is None:
+    user = users.find_one({"username": username})
+    if user is None:
         return jsonify({"error": "Invalid project name"}), 401
     
-    if session['user'] in valid_project['user_access']:
-        return jsonify(valid_project)
-    else:
-        return jsonify({"error": "You don't have access to this project"}), 401
+    result = {'projects': []}
+    for project_name in user['projects']:
+        valid_project = projects.find_one({'project_name': project_name})
+        if valid_project:
+            result['projects'].append(jsonify(valid_project))
+        else:
+            return jsonify({"error": "Couldn't find project"}), 401
+        
+    return jsonify(result)
 
 
 @app.route("/push_project", methods=["POST"])
 def push_project():
-     data = request.json #Need to contain: Project name, checking in/out, quantity, 
+     data = request.json #Need to contain: Project name, checking in/out, quantity, hw_set#
      project_name = data.get('project_name')
      quantity = data.get('quantity')
      check_in = data.get('check_in')    #checking out if false
+     hwset = data.get('hw_set')
 
      valid_project = projects.find_one({"project_name": project_name})
 
      if valid_project is None:
          return jsonify({"error": "Invalid project name"}), 401
      
-     if session['user'] in valid_project['user_access']:
+     current_user = hardware.find_one({'name': 'HWSet1'})
+     if current_user['username'] in valid_project['user_access']:
          if check_in:
-            hardware_data = hardware.find_one({"tag": "global-info"})
+            hardware_data = hardware.find_one({"name": f"HWSet{hwset}"})
             availability = hardware_data['availability']
             if availability >= quantity:
                 availability -= quantity
-                valid_project['quantity'] += quantity
+                new_quantity = valid_project[f'HWSet{str(hwset)}'] + quantity
+                projects.find_one({"project_name": project_name}, {'$set': {f'HWSet{str(hwset)}': new_quantity}})
          else:
-             return jsonify(valid_project)
+             if valid_project[f'HWSet{str(hwset)}'] >= quantity:
+                 new_quantity = valid_project[f'HWSet{str(hwset)}'] - quantity
+                 projects.find_one({"project_name": project_name}, {'$set': {f'HWSet{str(hwset)}': new_quantity}})
+         return jsonify(valid_project)
+     
      else:
          return jsonify({"error": "You don't have access to this project"}), 401
          
@@ -101,15 +113,14 @@ def push_project():
 @app.route('/create_project', methods=['POST'])
 def create_project():
     data = request.json #Need to contain: Project name, quantity, users
-    project_name = data.get('project_name')
-    users = data.get('users')
-
     if not data:
         return jsonify({"error": "Invalid project name"}), 401
-    
+    project_name = data.get('project_name')
     exist = projects.find_one({"project_name": project_name})
+
     if not exist:
-        projects.insert_one({'project_name':project_name, 'quantity': 0, 'users':users})
+        current_user = hardware.find_one({'name': 'HWSet1'})
+        projects.insert_one({'project_name':project_name, 'HWSet1': 0, 'HWSet2': 0, 'users': [current_user['username']]})
         return jsonify({"message": "Created Project Successfully"})
     else:
         return jsonify({"error": "A project with this name already exists"}), 401
@@ -117,7 +128,7 @@ def create_project():
 
 @app.route("/logout")
 def logout():
-    session.pop('username', default=None)
+    hardware.update_one({'name': 'HWSet1'}, {"$set": {'username': ''}})
     return '<p>Logged out</p>'
 
 
