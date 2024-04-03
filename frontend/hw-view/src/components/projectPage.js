@@ -166,19 +166,45 @@ function Projects({ currState, onCreateProject }) {
   }
 
   function handleCloseModalAndAddProject(projectData) {
-    setIsModalOpen(false); // Close the modal
+  setIsModalOpen(false); // Close the modal
 
-    if (!projectData) {
-      console.error('projectData is null or undefined');
-      return;
-    }
-
-    // Update projects state with the newly added project
-    setProjects(prevProjects => [...prevProjects, projectData]);
-
-    // Call onCreateProject here to ensure it's executed after the state update
-    onCreateProject(projectData);
+  if (!projectData) {
+    console.error('projectData is null or undefined');
+    return;
   }
+
+  fetch('http://127.0.0.1:80/create_project', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      'project_name': projectData.name,
+      'quantity': 0,
+      'users': "users" // Corrected syntax here
+    })
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to create project');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Project created successfully:', data);
+      // Optionally, you can provide feedback to the user that the project was created successfully
+    })
+    .catch(error => {
+      console.error('Error creating project:', error);
+      // Optionally, provide feedback to the user that the project creation failed
+    });
+
+  // Update projects state with the newly added project
+  setProjects(prevProjects => [...prevProjects, projectData]);
+
+  // Call onCreateProject here to ensure it's executed after the state update
+  onCreateProject(projectData);
+}
 
   return (
     <div>
@@ -195,4 +221,3 @@ function Projects({ currState, onCreateProject }) {
 }
 
 export default Projects;
-
