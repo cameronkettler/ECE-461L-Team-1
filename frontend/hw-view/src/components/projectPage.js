@@ -6,10 +6,10 @@ import NewProjectModal from './newProjectModal';
 
 
 
-function ProjectRow({project}){
+function ProjectRow({project, currUser}){
   const { name, listAuthorizedUsers, HWSet1, HWSet2, alreadyJoined } = project;
   const [joined, setJoined] = useState(alreadyJoined);
-  const [HWSet, pushHWSet] = useState();
+  const [pushHWSet] = useState();
 
 
   const f_pushHWSet = (input) => {
@@ -35,89 +35,134 @@ function ProjectRow({project}){
     }
   }
 
-  function handleCheckIn(event) {
-
-    const parent = event.target.parentElement;
-    const input = parent.querySelector("input[type='text']");
-    const value = parseInt(input.value);
-    const value_dic = {
-      'HWSet': value
-    }
-    if (!isNaN(value)) {
-      f_pushHWSet(value_dic);
-      const hardwareElement = parent.querySelector(".amtHardware");
-      if (hardwareElement) {
-        const currCount = parseInt(hardwareElement.textContent.split('/')[0]);
-        const minCount = 0;
-        const newCount = currCount - value;
-        if (newCount >= minCount) { 
-          hardwareElement.textContent = `${newCount}/${100}`;
-          input.value = ""; 
-        } else {
-          console.error("Attempted to check in more than the amount in your personal inventory");
-        }
+  function handleCheckIn(hwSet) {
+    return (event) => {
+      const parent = event.target.parentElement;
+      const input = parent.querySelector("input[type='text']");
+      const value = parseInt(input.value);
+      if (!isNaN(value)) {
+        fetch('http://127.0.0.1:80/check_in', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(
+            { HWSet: hwSet, 
+              amtCheckIn: value,
+              projName: name 
+            }),
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to check in hardware set');
+            }
+            return response.json();
+          })
+          .then(data => {
+            const availabilityElement = parent.querySelector(".amtHardware");
+            availabilityElement.textContent = `${data.newAvailability}/${1000}`; 
+          })
+          .catch(error => {
+            console.error('Error checking in hardware set:', error);
+          });
       }
-    }
+    };
   }
 
-  function handleCheckOut(event) {
-    const parent = event.target.parentElement;
-    const input = parent.querySelector("input[type='text']");
-    const value = parseInt(input.value);
-    if (!isNaN(value)) {
-      const hardwareElement = parent.querySelector(".amtHardware");
-      if (hardwareElement) {
-        const currentCount = parseInt(hardwareElement.textContent.split('/')[0]);
-        const newCount = currentCount + value;
-        if (newCount <= 100) {
-          hardwareElement.textContent = `${newCount}/${100}`;
-          input.value = "";
-        } else {
-          console.error("Attempted to check out more than the maximum amount allowed to a user (100)");
-        }
+
+  function handleCheckOut(hwSet) {
+    return (event) => {
+      const parent = event.target.parentElement;
+      const input = parent.querySelector("input[type='text']");
+      const value = parseInt(input.value);
+      if (!isNaN(value)) {
+        fetch('http://127.0.0.1:80/check_out', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            HWSet: hwSet,
+            amtCheckOut: value,
+            projName: name
+          }),
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Failed to check out hardware set');
+            }
+            return response.json();
+          })
+          .then(data => {
+            const availabilityElement = parent.querySelector(".amtHardware");
+            availabilityElement.textContent = `${data.newAvailability}/${1000}`; 
+          })
+          .catch(error => {
+            console.error('Error checking out hardware set:', error);
+          });
       }
-    }
+    };
   }
 
-  function handleJoin() {
-    // Used to update Join/Leave button
+  function handleJoinLeave() {
+    fetch('http://127.0.0.1:80/join_leave_project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+         action: !joined,
+         projName: name,
+         user: currUser 
+        }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to join or leave project');
+        }
+        // Handle successful response if needed
+      })
+      .catch(error => {
+        console.error('Error joining or leaving project:', error);
+      });
     setJoined(!joined); 
-    project.alreadyJoined = !joined; 
+    project.alreadyJoined = !joined;
   }
-
 
 
   return (
-  <tr>
-    <td className={`project-container ${alreadyJoined ? "joined-project" : ""}`}>
-      <h3 className = "align-middle">{project.name}</h3>
-      <tr className="project-info">
-        <span>Authorized Users: {listAuthorizedUsers}</span>
-        <tr>
-          <tr>
-          <span>HWSet1: <span className="amtHardware">{HWSet1}</span></span>
-            <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert}/>
-            <Button variant="contained" onClick ={handleCheckIn} disabled = {!alreadyJoined}>Check In </Button>
-            <Button variant="contained" onClick ={handleCheckOut} disabled = {!alreadyJoined}>Check Out </Button>
-          </tr>
-          <tr>
-          <span>HWSet2: <span className="amtHardware">{HWSet2}</span></span>
-            <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert}/>
-            <Button variant="contained" onClick ={handleCheckIn} disabled = {!alreadyJoined}>Check In </Button>
-            <Button variant="contained" onClick ={handleCheckOut} disabled = {!alreadyJoined}>Check Out </Button>
-          </tr>
-        </tr>
-      </tr>
-      <Button variant="contained" onClick={handleJoin}>{joined ? "Leave" : "Join"}</Button>
-    </td>
-  </tr>
+    <tr>
+      <td className={`project-container ${alreadyJoined ? "joined-project" : ""}`}>
+        <h3 className="align-middle">{project.name}</h3>
+        <div className="project-info">
+          <span>Authorized Users: {listAuthorizedUsers}</span>
+          <div>
+            <div>
+              <span>HWSet1: <span className="amtHardware">{HWSet1}</span></span>
+              <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert} />
+              <Button variant="contained" onClick={handleCheckIn("HWSet1")} disabled={!alreadyJoined}>Check In </Button>
+              <Button variant="contained" onClick={handleCheckOut("HWSet1")} disabled={!alreadyJoined}>Check Out </Button>
+            </div>
+            <div>
+              <span>HWSet2: <span className="amtHardware">{HWSet2}</span></span>
+              <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert} />
+              <Button variant="contained" onClick={handleCheckIn("HWSet2")} disabled={!alreadyJoined}>Check In </Button>
+              <Button variant="contained" onClick={handleCheckOut("HWSet2")} disabled={!alreadyJoined}>Check Out </Button>
+            </div>
+          </div>
+        </div>
+        <Button variant="contained" onClick={() => handleJoinLeave()}>{joined ? "Leave" : "Join"}</Button>
+      </td>
+    </tr>
   );
 }
 
 // Following "React Component Heirarchy" example structure
-function ProjectTable({projectInfo}){
+function ProjectTable({projectInfo, user}){
   const rows = [];
   let lastCategory = null;
+
+  console.log(projectInfo)
 
   if (!Array.isArray(projectInfo)) {
     return <div>Error: Project information is not available</div>;
@@ -128,7 +173,8 @@ function ProjectTable({projectInfo}){
       rows.push(
         <ProjectRow
           key={project.name}
-          project={project} 
+          project={project}
+          currUser = {user} 
         />
       );
     }
@@ -152,15 +198,20 @@ function Projects({ currState, onCreateProject }) {
 
   useEffect(() => {
     // Fetch projects data from the backend when the component mounts
-    fetch('http://127.0.0.1:80/get_projects?username=${username}')
+    fetch(`http://127.0.0.1:80/get_projects?username=${username}`)
       .then(res => res.json())
       .then(data => {
-        setProjects(data); // Update the projects state with the fetched data
+        if (data.projects) {
+          // Update the projects state with the fetched data
+          setProjects(data.projects);
+        } else {
+          console.error('Error fetching projects:', data.error);
+        }
       })
       .catch(error => {
         console.error('Error fetching projects:', error);
       });
-  }, [username]); // Empty dependency array ensures the effect runs only once when the component mounts
+  }, [username]);
 
   function handleSignOut() {
     navigate('/');
@@ -220,7 +271,9 @@ function Projects({ currState, onCreateProject }) {
       <h2>Projects</h2>
       <h4>Already Joined Projects will appear in light green</h4>
       <h4>Current personal inventory and projects are displayed below</h4>
-      <ProjectTable projectInfo={projects} />
+      <h4>Current service capacity is 1000 Hardware Components for HWSet1 and HWSet2</h4>
+      <h5>To get the most accurate availability data, be sure to REFRESH THE PAGE</h5>
+      <ProjectTable  projectInfo={projects} user = {username} />
       <Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button>
       <Button variant="contained" onClick={handleNewProject} className="button-gap">Create new project</Button>
       <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />

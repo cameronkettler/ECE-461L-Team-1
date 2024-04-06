@@ -61,7 +61,7 @@ def login():
 
 
 @app.route("/get_projects", methods=["GET"])
-def get_project():
+def get_projects():
     username = request.args.get('username')
 
     user = users.find_one({"username": username})
@@ -71,11 +71,20 @@ def get_project():
     result = []
     for project_name in user.get('projects', []):
         valid_project = projects.find_one({'project_name': project_name})
+        hwSet1 = hardware.find_one({'name': 'HWSet1'})
+        hwSet2 = hardware.find_one({'name': 'HWSet2'})
         if valid_project:
-            result.append(valid_project)
+            project_data = {
+                'name': valid_project['project_name'],
+                'listAuthorizedUsers': ', '.join(valid_project.get('users', [])),
+                'HWSet1': f"{hwSet1.get('availability')}/1000",
+                'HWSet2': f"{hwSet2.get('availability')}/1000",
+                'alreadyJoined': username in valid_project.get('users', [])
+            }
+            result.append(project_data)
         else:
-            return jsonify({"error": "Couldn't find project"}), 401
-        
+            return jsonify({"error": "Couldn't find project"}), 404
+
     return jsonify({"projects": result})
 
 
@@ -137,6 +146,59 @@ def create_project():
       
     # Return success message
     return jsonify({"message": "Project created successfully"}), 200
+
+
+@app.route("/check_in", methods=["POST"])
+def check_in():
+    data = request.json
+    hwSet = data.get('HWSet')
+    projName = data.get('projName')
+    valToCheckIn = data.get('amtCheckIn')
+    project = projects.find_one({'project_name': projName})
+    currHWSet = hardware.find_one({'name': hwSet})
+    newVal = project[hwSet] - valToCheckIn
+
+    if newVal >= 0:
+        projects.update_one({'project_name': projName}, {'$set': {hwSet: newVal}})
+        newAvailability = currHWSet['availability'] + valToCheckIn
+        hardware.update_one({'name': hwSet}, {'$set': {'availability': newAvailability}})
+        return jsonify({'newAvailability': newAvailability})
+    else:
+        return jsonify({"error": "Insufficient quantity to check in"}), 404
+
+@app.route("/check_out", methods=["POST"])
+def check_out():
+    data = request.json
+    hwSet = data.get('HWSet')
+    projName = data.get('projName')
+    valToCheckOut = data.get('amtCheckOut')
+    project = projects.find_one({'project_name': projName})
+    currHWSet = hardware.find_one({'name': hwSet})
+    newVal = valToCheckOut + project[hwSet]
+
+    if newVal <= 1000:
+        projects.update_one({'project_name': projName}, {'$set': {hwSet: newVal}})
+        newAvailability = currHWSet['availability'] - valToCheckOut
+        hardware.update_one({'name': hwSet}, {'$set': {'availability': newAvailability}})
+        return jsonify({'newAvailability': newAvailability})
+    else:
+        return jsonify({"error": "Insufficient quantity to check out"}), 404
+
+@app.route("/join_leave_project", methods=["POST"])
+def join_leave_project():
+    data = request.json
+    action = data.get('action')
+    projName = data.get('projName')
+    username = data.get('user')
+    project = projects.find_one({'project_name': projName})
+    if project:
+        if action:
+            projects.update_one({'project_name': project['project_name']}, {'$addToSet': {'users': username}})
+        else:
+            projects.update_one({'project_name': project['project_name']}, {'$pull': {'users': username}})
+        return jsonify({"success": True})
+    else:
+        return jsonify({"error": "Project not found"}), 404
 
 
 @app.route("/logout")
