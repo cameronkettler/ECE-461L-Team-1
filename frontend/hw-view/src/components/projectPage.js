@@ -1,6 +1,6 @@
 import './projectPage.css';
 import React, {useState, useEffect} from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import {useLocation, useNavigate} from 'react-router-dom';
 import Button from '@mui/material/Button';
 import NewProjectModal from './newProjectModal';
 
@@ -91,23 +91,23 @@ function ProjectRow({project}){
   <tr>
     <td className={`project-container ${alreadyJoined ? "joined-project" : ""}`}>
       <h3 className = "align-middle">{project.name}</h3>
-      <div className="project-info">
+      <tr className="project-info">
         <span>Authorized Users: {listAuthorizedUsers}</span>
-        <div>
-          <div>
+        <tr>
+          <tr>
           <span>HWSet1: <span className="amtHardware">{HWSet1}</span></span>
             <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert}/>
             <Button variant="contained" onClick ={handleCheckIn} disabled = {!alreadyJoined}>Check In </Button>
             <Button variant="contained" onClick ={handleCheckOut} disabled = {!alreadyJoined}>Check Out </Button>
-          </div>
-          <div>
+          </tr>
+          <tr>
           <span>HWSet2: <span className="amtHardware">{HWSet2}</span></span>
             <input type="text" defaultValue="Enter Quantity" onClick={handleInputClick} onRevert={handleInputRevert}/>
             <Button variant="contained" onClick ={handleCheckIn} disabled = {!alreadyJoined}>Check In </Button>
             <Button variant="contained" onClick ={handleCheckOut} disabled = {!alreadyJoined}>Check Out </Button>
-          </div>
-        </div>
-      </div>
+          </tr>
+        </tr>
+      </tr>
       <Button variant="contained" onClick={handleJoin}>{joined ? "Leave" : "Join"}</Button>
     </td>
   </tr>
@@ -119,12 +119,15 @@ function ProjectTable({projectInfo}){
   const rows = [];
   let lastCategory = null;
 
+  if (!Array.isArray(projectInfo)) {
+    return <div>Error: Project information is not available</div>;
+  }
+
   projectInfo.forEach((project) => {
     if(project.name !== lastCategory){
       rows.push(
         <ProjectRow
           key={project.name}
-          // Pass the entire project into <ProjectRow> to access data as a prop in ProjectRow function
           project={project} 
         />
       );
@@ -141,13 +144,15 @@ function ProjectTable({projectInfo}){
 }
 
 function Projects({ currState, onCreateProject }) {
+  const location = useLocation();
+  const username = location.state.username;
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projects, setProjects] = useState([]); // State to store the projects data
 
   useEffect(() => {
     // Fetch projects data from the backend when the component mounts
-    fetch('http://127.0.0.1:80/get_projects')
+    fetch('http://127.0.0.1:80/get_projects?username=${username}')
       .then(res => res.json())
       .then(data => {
         setProjects(data); // Update the projects state with the fetched data
@@ -155,7 +160,7 @@ function Projects({ currState, onCreateProject }) {
       .catch(error => {
         console.error('Error fetching projects:', error);
       });
-  }, []); // Empty dependency array ensures the effect runs only once when the component mounts
+  }, [username]); // Empty dependency array ensures the effect runs only once when the component mounts
 
   function handleSignOut() {
     navigate('/');
@@ -166,57 +171,60 @@ function Projects({ currState, onCreateProject }) {
   }
 
   function handleCloseModalAndAddProject(projectData) {
-  setIsModalOpen(false); // Close the modal
+    setIsModalOpen(false); // Close the modal
 
-  if (!projectData) {
-    console.error('projectData is null or undefined');
-    return;
+    if (!projectData) {
+      console.error('projectData is null or undefined');
+      return;
+    }
+
+    fetch('http://127.0.0.1:80/create_project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        'project_name': projectData.name,
+        'quantity': 0,
+        'users': [username], // Corrected syntax here
+        'username' : username
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create project');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Project created successfully:', data);
+        // Update projects state with the newly added project
+        setProjects(prevProjects => {
+          if (!Array.isArray(prevProjects)) {
+            return [projectData];
+          }
+          return [...prevProjects, projectData];
+        });
+
+        // Call onCreateProject here to ensure it's executed after the state update
+        onCreateProject(projectData);
+      })
+      .catch(error => {
+        console.error('Error creating project:', error);
+        // Optionally, provide feedback to the user that the project creation failed
+      });
   }
 
-  fetch('http://127.0.0.1:80/create_project', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      'project_name': projectData.name,
-      'quantity': 0,
-      'users': "users" // Corrected syntax here
-    })
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to create project');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Project created successfully:', data);
-      // Optionally, you can provide feedback to the user that the project was created successfully
-    })
-    .catch(error => {
-      console.error('Error creating project:', error);
-      // Optionally, provide feedback to the user that the project creation failed
-    });
-
-  // Update projects state with the newly added project
-  setProjects(prevProjects => [...prevProjects, projectData]);
-
-  // Call onCreateProject here to ensure it's executed after the state update
-  onCreateProject(projectData);
-}
-
   return (
-    <div>
+    <tr>
       <h2>Projects</h2>
       <h4>Already Joined Projects will appear in light green</h4>
-      <h4>Each user will be able to check out a maximum of 100 hardware components of each HW set at a time</h4>
       <h4>Current personal inventory and projects are displayed below</h4>
       <ProjectTable projectInfo={projects} />
       <Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button>
       <Button variant="contained" onClick={handleNewProject} className="button-gap">Create new project</Button>
       <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />
-    </div>
+    </tr>
   );
 }
 

@@ -1,5 +1,5 @@
 def encrypt(input: str, n: int, d: int):
-    result = ''
+    result = ""
     for char in input[::-1]:
         val = ord(char)
         change = (d * n)
@@ -13,7 +13,7 @@ def encrypt(input: str, n: int, d: int):
     return result
 
 def decrypt(input: str, n: int, d: int):
-    result = ''
+    result = ""
     for char in reversed(input):
         val = ord(char)
         change = (-1 * d * n)

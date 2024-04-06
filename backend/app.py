@@ -10,8 +10,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
 app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
-app.secret_key = "temp_secret_key"
-CORS(app)
+# app.secret_key = "temp_secret_key"
+CORS(app, origins='http://localhost:3000')
 
 uri = "mongodb+srv://andrewjli121:R6BykARDXo2JIEEs@ece461l.orvvqud.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(uri, server_api=ServerApi('1'))
@@ -36,7 +36,9 @@ def signUp():
           return jsonify({"error": "Username already exists, please select another Username"}), 400
      
      else:
-          users.insert_one({"username": username, "password": encrypt(password, 2, 1), projects: []})
+          encryptedPass = encrypt(password, 2, 1)
+          print(encryptedPass)
+          users.insert_one({"username": username, "password": encryptedPass, "projects": []})
           return jsonify({"message": "Signup Successful"})
 
 
@@ -60,22 +62,21 @@ def login():
 
 @app.route("/get_projects", methods=["GET"])
 def get_project():
-    data = request.json
-    username = data.get('user')
+    username = request.args.get('username')
 
     user = users.find_one({"username": username})
     if user is None:
-        return jsonify({"error": "Invalid project name"}), 401
+        return jsonify({"error": "Invalid User"}), 404
     
-    result = {'projects': []}
-    for project_name in user['projects']:
+    result = []
+    for project_name in user.get('projects', []):
         valid_project = projects.find_one({'project_name': project_name})
         if valid_project:
-            result['projects'].append(jsonify(valid_project))
+            result.append(valid_project)
         else:
             return jsonify({"error": "Couldn't find project"}), 401
         
-    return jsonify(result)
+    return jsonify({"projects": result})
 
 
 @app.route("/push_project", methods=["POST"])
@@ -112,18 +113,30 @@ def push_project():
 
 @app.route('/create_project', methods=['POST'])
 def create_project():
-    data = request.json #Need to contain: Project name, quantity, users
-    if not data:
-        return jsonify({"error": "Invalid project name"}), 401
-    project_name = data.get('project_name')
-    exist = projects.find_one({"project_name": project_name})
+    data = request.json
+    username = data.get('username')
 
-    if not exist:
-        current_user = hardware.find_one({'name': 'HWSet1'})
-        projects.insert_one({'project_name':project_name, 'HWSet1': 0, 'HWSet2': 0, 'users': [current_user['username']]})
-        return jsonify({"message": "Created Project Successfully"})
-    else:
-        return jsonify({"error": "A project with this name already exists"}), 401
+    print(username)
+
+    print(data)
+
+    # Check if request data is valid
+    if not data or 'project_name' not in data:
+        return jsonify({"error": "Invalid request data"}), 400
+    
+    project_name = data['project_name']
+    
+    # Check if project with the same name already exists
+    if projects.find_one({"project_name": project_name}):
+        return jsonify({"error": "A project with this name already exists"}), 400
+    
+    # Insert new project into the database
+    current_user = users.find_one({'username': username})
+    projects.insert_one({'project_name': project_name, 'HWSet1': 0, 'HWSet2': 0, 'users': [current_user['username']]})
+    users.update_one({'username': username}, {'$push': {'projects': project_name}}) 
+      
+    # Return success message
+    return jsonify({"message": "Project created successfully"}), 200
 
 
 @app.route("/logout")
@@ -137,4 +150,4 @@ def index():
      return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True, port=os.environ.get("PORT", 80))
+    app.run(host="127.0.0.1", debug=True, port=os.environ.get("PORT", 80))

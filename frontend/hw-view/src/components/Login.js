@@ -28,7 +28,7 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate('/project');
+        navigate('/project', {state: {username: username}});
       } else {
         console.error('Login failed:', response.statusText);
       }
@@ -37,16 +37,16 @@ function Login() {
     }
   };
 
-  useEffect(() => {
-    fetch('https://api.example.com/data')
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error);
-      });
-  }, []);
+  // useEffect(() => {
+  //   fetch('https://api.example.com/data')
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       console.log(data);
+  //     })
+  //     .catch(error => {
+  //       console.error('Error fetching data:', error);
+  //     });
+  // }, []);
 
   return (
     <div className="App">
