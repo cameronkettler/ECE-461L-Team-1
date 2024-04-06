@@ -79,11 +79,14 @@ def get_projects():
                 'listAuthorizedUsers': ', '.join(valid_project.get('users', [])),
                 'HWSet1': f"{hwSet1.get('availability')}/1000",
                 'HWSet2': f"{hwSet2.get('availability')}/1000",
-                'alreadyJoined': username in valid_project.get('users', [])
+                'alreadyJoined': username in valid_project.get('users', []),
+                'authorizedUsers': valid_project['authorized users'],
             }
             result.append(project_data)
         else:
-            return jsonify({"error": "Couldn't find project"}), 404
+            continue
+
+    print(result)
 
     return jsonify({"projects": result})
 
@@ -125,7 +128,7 @@ def create_project():
     data = request.json
     username = data.get('username')
 
-    print(username)
+    authorizedUsers = data.get('authorizedUsers')
 
     print(data)
 
@@ -141,12 +144,35 @@ def create_project():
     
     # Insert new project into the database
     current_user = users.find_one({'username': username})
-    projects.insert_one({'project_name': project_name, 'HWSet1': 0, 'HWSet2': 0, 'users': [current_user['username']]})
+    projects.insert_one({'project_name': project_name, 'HWSet1': 0, 'HWSet2': 0, 'users': [current_user['username']], 'authorized users': authorizedUsers})
     users.update_one({'username': username}, {'$push': {'projects': project_name}}) 
-      
+  
     # Return success message
     return jsonify({"message": "Project created successfully"}), 200
 
+@app.route('/join_project', methods=['POST'])
+def join_project():
+    data = request.json
+    projectName = data.get('projectName')
+    username = data.get('username')
+
+    print(data)
+
+    if not projectName or not username:
+        return jsonify({"error": "Project ID and username are required"}), 400
+
+    project = projects.find_one({"project_name": projectName})
+
+    if not project:
+        return jsonify({"error": "Project not found"}), 404
+
+    if username not in project['authorized users']:
+        return jsonify({"error": "You are not authorized to join this project"}), 403
+    
+    projects.update_one({"project_id": projectName}, {"$push": {"users": username}})
+    users.update_one({"username": username}, {"$push": {"projects": projectName}})
+
+    return jsonify({"message": "User successfully joined the project"}), 200
 
 @app.route("/check_in", methods=["POST"])
 def check_in():

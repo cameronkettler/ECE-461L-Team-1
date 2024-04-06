@@ -8,13 +8,15 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
     const [name, setProjectName] = useState('');
     const [description, setDescription] = useState('');
     const [projectID, setProjectID] = useState('');
+    const [authorizedUsers, setAuthorizedUsers] = useState([]);
 
     const handleSubmit = (event) => {
         event.preventDefault(); 
-        onCreateProject({ name, description, projectID });
+        onCreateProject({ name, description, projectID, authorizedUsers });
         setProjectName('');
         setDescription('');
         setProjectID('');
+        setAuthorizedUsers([]);
         console.log("Submitting form and closing modal...");
         onClose();
 
@@ -54,6 +56,16 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
                         placeholder="Project ID"
                         value={projectID}
                         onChange={(e) => setProjectID(e.target.value)}
+                        className="input-field" 
+                    />
+                    <p>Authorized Users</p>
+                    <p>---INCLUDING CURRENT USER---</p>
+                    <p>(Use a comma with no spaces to separate users):</p>
+                    <input
+                        type="text"
+                        placeholder="Authorized Users (comma separated)"
+                        value={authorizedUsers.join(',')}
+                        onChange={(e) => setAuthorizedUsers(e.target.value.split(','))}
                         className="input-field" 
                     />
                     <p></p>

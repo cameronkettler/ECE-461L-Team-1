@@ -3,6 +3,7 @@ import React, {useState, useEffect} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import Button from '@mui/material/Button';
 import NewProjectModal from './newProjectModal';
+import JoinExistingModal from './joinExistingProject.js';
 
 
 
@@ -194,7 +195,9 @@ function Projects({ currState, onCreateProject }) {
   const username = location.state.username;
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [projects, setProjects] = useState([]); // State to store the projects data
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
     // Fetch projects data from the backend when the component mounts
@@ -218,16 +221,22 @@ function Projects({ currState, onCreateProject }) {
   }
 
   function handleNewProject() {
-    setIsModalOpen(true);
+    setIsNewModalOpen(true);
+  }
+
+  function handleJoinAuthorizedProject() {
+    setIsJoinModalOpen(true);
   }
 
   function handleCloseModalAndAddProject(projectData) {
-    setIsModalOpen(false); // Close the modal
+    setIsNewModalOpen(false);
 
     if (!projectData) {
       console.error('projectData is null or undefined');
       return;
     }
+
+    const authorizedUsers = Array.isArray(projectData.authorizedUsers) ? projectData.authorizedUsers : [];
 
     fetch('http://127.0.0.1:80/create_project', {
       method: 'POST',
@@ -237,8 +246,9 @@ function Projects({ currState, onCreateProject }) {
       body: JSON.stringify({
         'project_name': projectData.name,
         'quantity': 0,
-        'users': [username], // Corrected syntax here
-        'username' : username
+        'users': [username],
+        'username' : username,
+        "authorizedUsers": authorizedUsers,
       })
     })
       .then(response => {
@@ -256,14 +266,45 @@ function Projects({ currState, onCreateProject }) {
           }
           return [...prevProjects, projectData];
         });
-
-        // Call onCreateProject here to ensure it's executed after the state update
         onCreateProject(projectData);
       })
       .catch(error => {
         console.error('Error creating project:', error);
-        // Optionally, provide feedback to the user that the project creation failed
       });
+  }
+
+  function handleCloseModalJoinAuthorizedProject(projectData) {
+    setIsJoinModalOpen(false);
+  
+    if (!projectData) {
+      console.error('projectData is null or undefined');
+      return;
+    }
+  
+    console.log(projectData);
+  
+    fetch('http://127.0.0.1:80/join_project', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        'projectName': projectData.projectID,
+        'username': username,
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to join project');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Successfully joined project:', data);
+    })
+    .catch(error => {
+      console.error('Error joining project:', error);
+    });
   }
 
   return (
@@ -274,9 +315,11 @@ function Projects({ currState, onCreateProject }) {
       <h4>Current service capacity is 1000 Hardware Components for HWSet1 and HWSet2</h4>
       <h5>To get the most accurate availability data, be sure to REFRESH THE PAGE</h5>
       <ProjectTable  projectInfo={projects} user = {username} />
-      <Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button>
-      <Button variant="contained" onClick={handleNewProject} className="button-gap">Create new project</Button>
-      <NewProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />
+      <Button variant="contained" onClick={handleNewProject} className="button-gap">Create New Project</Button>
+      <Button variant="contained" onClick={handleJoinAuthorizedProject} className="button-gap">Join Existing Project</Button>
+      <p><Button variant="contained" onClick={handleSignOut} className="button-gap">Sign Out</Button></p>
+      <JoinExistingModal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} onJoinProject={handleCloseModalJoinAuthorizedProject} />
+      <NewProjectModal isOpen={isNewModalOpen} onClose={() => setIsNewModalOpen(false)} onCreateProject={handleCloseModalAndAddProject} />
     </tr>
   );
 }

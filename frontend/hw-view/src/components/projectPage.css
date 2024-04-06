@@ -50,6 +50,7 @@
     padding: 100px; /* Add padding to modal content */
     border-radius: 8px; /* Add border radius to modal content */
     outline: none; /* Remove default outline */
+    text-align: center;
 }
 
 /* Style for the black overlay */
