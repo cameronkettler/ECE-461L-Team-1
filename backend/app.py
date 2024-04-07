@@ -4,7 +4,7 @@ from flask_cors import CORS
 import json
 import os
 import sys
-from encryption import encrypt, decrypt
+from backend.encryption import encrypt, decrypt
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
