@@ -1,2 +1,1 @@
-web: gunicorn backend.app:app
-npm start
+web: bin/boot
