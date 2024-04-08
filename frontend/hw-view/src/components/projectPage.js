@@ -41,6 +41,7 @@ function ProjectRow({project, currUser}){
       const parent = event.target.parentElement;
       const input = parent.querySelector("input[type='text']");
       const value = parseInt(input.value);
+      var flag = 0;
       if (!isNaN(value)) {
         fetch('http://127.0.0.1:80/check_in', {
           method: 'POST',
@@ -55,18 +56,26 @@ function ProjectRow({project, currUser}){
         })
           .then(response => {
             if (!response.ok) {
+              window.alert(`Failed to check in hardware:  (${value})`);
               throw new Error('Failed to check in hardware set');
             }
+            else{ 
+              flag =1;} 
+
             return response.json();
           })
           .then(data => {
             const availabilityElement = parent.querySelector(".amtHardware");
             availabilityElement.textContent = `${data.newAvailability}/${1000}`; 
           })
+        
           .catch(error => {
             console.error('Error checking in hardware set:', error);
-          });
-      }
+          }); 
+      }  
+        if (flag ==1){ 
+          window.location.reload(); 
+        }
     };
   }
 
@@ -76,6 +85,7 @@ function ProjectRow({project, currUser}){
       const parent = event.target.parentElement;
       const input = parent.querySelector("input[type='text']");
       const value = parseInt(input.value);
+      var flag = 0;
       if (!isNaN(value)) {
         fetch('http://127.0.0.1:80/check_out', {
           method: 'POST',
@@ -90,6 +100,7 @@ function ProjectRow({project, currUser}){
         })
           .then(response => {
             if (!response.ok) {
+              window.alert(`Failed to check in hardware: (${value}) `);
               throw new Error('Failed to check out hardware set');
             }
             return response.json();
@@ -102,6 +113,10 @@ function ProjectRow({project, currUser}){
             console.error('Error checking out hardware set:', error);
           });
       }
+      if (flag ==1){ 
+        window.location.reload(); 
+      }
+        
     };
   }
 
@@ -119,6 +134,7 @@ function ProjectRow({project, currUser}){
     })
       .then(response => {
         if (!response.ok) {
+          window.alert('Failed to join or leave project');
           throw new Error('Failed to join or leave project');
         }
         // Handle successful response if needed
@@ -208,11 +224,12 @@ function Projects({ currState, onCreateProject }) {
           // Update the projects state with the fetched data
           setProjects(data.projects);
         } else {
-          console.error('Error fetching projects:', data.error);
+          window.alert('Error fetching projects:', data.error);
         }
       })
       .catch(error => {
         console.error('Error fetching projects:', error);
+        
       });
   }, [username]);
 
@@ -253,11 +270,15 @@ function Projects({ currState, onCreateProject }) {
     })
       .then(response => {
         if (!response.ok) {
+          const projectName = projectData.name;
+          window.alert(`Failed to create project: Project '${projectName}' already exists`);
           throw new Error('Failed to create project');
+         
         }
         return response.json();
       })
       .then(data => {
+        window.alert('Project created successfully:', data);
         console.log('Project created successfully:', data);
         // Update projects state with the newly added project
         setProjects(prevProjects => {
@@ -295,11 +316,13 @@ function Projects({ currState, onCreateProject }) {
     })
     .then(response => {
       if (!response.ok) {
+        window.alert('Failed to join project')
         throw new Error('Failed to join project');
       }
       return response.json();
     })
     .then(data => {
+      window.alert('Successfully joined project:', data);
       console.log('Successfully joined project:', data);
     })
     .catch(error => {
