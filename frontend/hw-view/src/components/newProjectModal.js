@@ -34,7 +34,7 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
                 <h2 id="modal-modal-title">Create New Project</h2>
 
                 <form onSubmit={handleSubmit}>
-                <p>Project name: </p>
+                <p>Project ID: </p>
                     <input
                         type="text"
                         placeholder="Project Name"
