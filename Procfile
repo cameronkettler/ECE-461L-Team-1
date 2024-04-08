@@ -1,2 +1,1 @@
-web: gunicorn backend.app:app
-npm start
+web: gunicorn backend.app:app && npm start --prefix frontend\hw-view\src\App.js
