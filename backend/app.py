@@ -169,8 +169,10 @@ def join_project():
     if username not in project['authorized users']:
         return jsonify({"error": "You are not authorized to join this project"}), 403
     
-    projects.update_one({"project_id": projectName}, {"$push": {"users": username}})
-    users.update_one({"username": username}, {"$push": {"projects": projectName}})
+    current_user = users.find_one({'username': username})
+    if projectName not in current_user['projects']:
+        projects.update_one({"project_name": projectName}, {"$push": {"users": username}})
+        users.update_one({"username": username}, {"$push": {"projects": projectName}})
 
     return jsonify({"message": "User successfully joined the project"}), 200
 
