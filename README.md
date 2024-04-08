@@ -14,7 +14,7 @@ NOTE: To get the best results, REFRESH the page after every action!!
   If a project with the same name already exists, an error message will pop up saying that you have to create your project with another name.
 
 # Join project
-  If you want to join an existing projects, press the button and put in the project name that you want to join. If that name exists, it will display the project that you joined AFTER you refresh the page. If it doesn't, an error message will pop up.
+  If you want to join an existing projects, press the button and put in the project name that you want to join. If that name exists and you were added as a verified user when it was created, it will display the project that you joined AFTER you refresh the page. If it doesn't, an error message will pop up.
 
 # Sign out
   Press the sign out page to go back to the log in page. 
@@ -27,8 +27,8 @@ NOTE: To get the best results, REFRESH the page after every action!!
       Press the join project for each project that you want to check-in or check-out harware sets from. You cannot make changes to how much hardware you checkout from a project until you join it. You can press the leave button when you want to leave the project when you are done.
       
     Check-out:
-      You put the amount in the box that you want to check out from the hardware set, then press the check-out button to subtract it from the set. If you check-out more than is available, it will display and error.
+      You put the amount in the box that you want to check out from the hardware set, then press the check-out button to subtract it from the set. If you check-out more than is available, it will display and error. Refresh the page to see the updated amount across all projects.
 
     Check-in:
-      You put the amount in the text-box that you want to check in to the hardware set, then press the check in button to add it back to the hardware set. If you try to check in more that you have already checked out from the set from that project, you will get an error message. 
+      You put the amount in the text-box that you want to check in to the hardware set, then press the check in button to add it back to the hardware set. If you try to check in more that you have already checked out from the set from that project, you will get an error message. Refresh the page to see the updated amount across all projects.
   
