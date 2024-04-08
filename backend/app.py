@@ -4,10 +4,39 @@ from flask_cors import CORS
 import json
 import os
 import sys
-from encryption import encrypt, decrypt
+
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+
+
+def encrypt(input: str, n: int, d: int):
+    result = ""
+    for char in input[::-1]:
+        val = ord(char)
+        change = (d * n)
+        for _ in range(0, change, d):
+            val += d
+            if val < 34:
+                val = 126
+            elif val > 126:
+                val = 35
+        result += chr(val)
+    return result
+
+def decrypt(input: str, n: int, d: int):
+    result = ""
+    for char in reversed(input):
+        val = ord(char)
+        change = (-1 * d * n)
+        for _ in range(0, change, -1 * d):
+            val += (-1 * d)
+            if val < 34:
+                val = 126
+            elif val > 126:
+                val = 35
+        result += chr(val)
+    return result
 
 app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
 # app.secret_key = "temp_secret_key"
