@@ -27,8 +27,10 @@ function Signup() {
       });
       if (response.ok) {
         console.log('Sign up successful');
-        setError('Sig up successful')
-        navigate('/project', {state: {username: username}});
+        // Show success message using alert
+        alert('Sign up successful!');
+        setError('Sign up successful'); // Optional: set state for success message
+        navigate('/project', { state: { username: username } });
       } else {
         const data = await response.json();
         setError(data.message || 'Sign-up failed');
