@@ -26,7 +26,7 @@ function JoinExistingProject({ isOpen, onClose, onJoinProject }) {
                 <h2 id="modal-modal-title">Join Existing Project</h2>
 
                 <form onSubmit={handleSubmit}>
-                    <p>Project ID to Join: </p>
+                    <p>Project Name to Join: </p>
                     <input
                         type="text"
                         placeholder="Project ID"
