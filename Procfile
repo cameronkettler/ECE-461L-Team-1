@@ -1,1 +1,1 @@
-web: gunicorn backend.app:app
+web: gunicorn frontend.hw-view.src.App.js:App
