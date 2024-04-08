@@ -1,4 +1,5 @@
 # ECE-461L-Team-1 README
+Authors: Cameron Kettler, Nidhi Thippana, Anusha Razdan, Andrew Li, Charles Xie
 
 NOTE: To get the best results, REFRESH the page after every action!!
 
