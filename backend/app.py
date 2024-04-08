@@ -41,7 +41,7 @@ def decrypt(input: str, n: int, d: int):
 
 app = Flask(__name__, static_folder="../frontend/hw-view/public", static_url_path="/")
 # app.secret_key = "temp_secret_key"
-CORS(app, origins='http://localhost:3000')
+CORS(app)#, origins='http://localhost:3000')
 
 uri = "mongodb+srv://andrewjli121:R6BykARDXo2JIEEs@ece461l.orvvqud.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(uri, server_api=ServerApi('1'))
