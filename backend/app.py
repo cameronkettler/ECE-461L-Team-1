@@ -4,7 +4,7 @@ from flask_cors import CORS
 import json
 import os
 import sys
-from backend.encryption import encrypt, decrypt
+from encryption import encrypt, decrypt
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -238,4 +238,4 @@ def index():
      return send_from_directory(app.static_folder, "index.html")
 
 if __name__ == '__main__':
-    app.run(host="127.0.0.1", debug=True, port=os.environ.get("PORT"))
+    app.run(host="127.0.0.1", debug=True, port=os.environ.get("PORT", 80))
