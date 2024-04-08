@@ -50,14 +50,6 @@ function NewProjectModal({ isOpen, onClose, onCreateProject }) {
                         onChange={(e) => setDescription(e.target.value)}
                         className="input-field"
                     />
-                    <p>Project ID: </p>
-                    <input
-                        type="text"
-                        placeholder="Project ID"
-                        value={projectID}
-                        onChange={(e) => setProjectID(e.target.value)}
-                        className="input-field" 
-                    />
                     <p>Authorized Users</p>
                     <p>---INCLUDING CURRENT USER---</p>
                     <p>(Use a comma with no spaces to separate users):</p>
