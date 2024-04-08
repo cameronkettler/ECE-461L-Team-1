@@ -1,5 +1,5 @@
-import React, { useState,useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; 
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -28,25 +28,17 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate('/project', {state: {username: username}});
+        // Show success alert
+        window.alert('Login successful! Redirecting...');
+        navigate('/project', { state: { username: username } });
       } else {
+        window.alert('Login failed, Please sign up or try again with the correct password');
         console.error('Login failed:', response.statusText);
       }
     } catch (error) {
       console.error('Error:', error);
     }
   };
-
-  // useEffect(() => {
-  //   fetch('https://api.example.com/data')
-  //     .then(response => response.json())
-  //     .then(data => {
-  //       console.log(data);
-  //     })
-  //     .catch(error => {
-  //       console.error('Error fetching data:', error);
-  //     });
-  // }, []);
 
   return (
     <div className="App">
@@ -65,7 +57,9 @@ function Login() {
           <br />
           <button type="submit">Login</button>
         </form>
-        <p className="sign-up-text">Don't have an account? <Link to="/signup">Sign Up</Link></p>
+        <p className="sign-up-text">
+          Don't have an account? <Link to="/signup">Sign Up</Link>
+        </p>
       </header>
     </div>
   );
