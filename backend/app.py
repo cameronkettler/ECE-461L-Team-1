@@ -4,7 +4,7 @@ from flask_cors import CORS
 import json
 import os
 import sys
-from backend.encryption import encrypt, decrypt
+from encryption import encrypt, decrypt
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
@@ -200,10 +200,11 @@ def check_out():
     valToCheckOut = data.get('amtCheckOut')
     project = projects.find_one({'project_name': projName})
     currHWSet = hardware.find_one({'name': hwSet})
-    newVal = valToCheckOut + project[hwSet]
+    newVal = currHWSet['availability'] - valToCheckOut
 
-    if newVal <= 1000:
-        projects.update_one({'project_name': projName}, {'$set': {hwSet: newVal}})
+    if newVal >= 0:
+        newAmtHdwr = project[hwSet] + valToCheckOut
+        projects.update_one({'project_name': projName}, {'$set': {hwSet: newAmtHdwr}})
         newAvailability = currHWSet['availability'] - valToCheckOut
         hardware.update_one({'name': hwSet}, {'$set': {'availability': newAvailability}})
         return jsonify({'newAvailability': newAvailability})
