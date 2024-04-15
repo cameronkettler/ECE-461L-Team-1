@@ -16,26 +16,26 @@ def encrypt(input: str, n: int, d: int):
     for char in input[::-1]:
         val = ord(char)
         change = (d * n)
-        for _ in range(0, change, d):
+        for _ in range(0, abs(change), abs(d)):
             val += d
             if val < 34:
                 val = 126
             elif val > 126:
-                val = 35
+                val = 34
         result += chr(val)
     return result
 
 def decrypt(input: str, n: int, d: int):
     result = ""
-    for char in reversed(input):
+    for char in input[::-1]:
         val = ord(char)
-        change = (-1 * d * n)
-        for _ in range(0, change, -1 * d):
+        change = (d * n)
+        for _ in range(0, abs(change), abs(d)):
             val += (-1 * d)
             if val < 34:
                 val = 126
             elif val > 126:
-                val = 35
+                val = 34
         result += chr(val)
     return result
 
